@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Feudle</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0d0d14; --surface: #16161f; --border: #2a2a3a;
+    --accent: #f0c040; --red: #e05c5c; --green: #4ecb71;
+    --text: #f0eff5; --muted: #7a798a; --r: 14px;
+  }
+  html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; overflow: hidden; }
+  #app { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px 20px; }
+  .screen { display: none; flex-direction: column; align-items: center; width: 100%; max-width: 400px; }
+  .screen.active { display: flex; }
+
+  .logo { font-family: 'Bebas Neue', sans-serif; font-size: 56px; letter-spacing: 4px; color: var(--accent); text-shadow: 0 0 30px rgba(240,192,64,.4); margin-bottom: 4px; }
+  .tagline { font-size: 12px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 36px; }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 24px; width: 100%; }
+  label { display: block; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+  input { width: 100%; background: var(--bg); border: 1.5px solid var(--border); border-radius: 10px; padding: 14px 16px; font-size: 18px; color: var(--text); font-family: 'DM Sans', sans-serif; outline: none; transition: border-color .2s; margin-bottom: 14px; }
+  input:focus { border-color: var(--accent); }
+  input.code { font-size: 30px; letter-spacing: 10px; text-align: center; font-family: 'Bebas Neue', sans-serif; }
+  button { width: 100%; padding: 15px; border: none; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all .15s; }
+  .btn-y { background: var(--accent); color: #0d0d14; }
+  .btn-y:hover { filter: brightness(1.1); transform: translateY(-1px); }
+  .btn-y:active { transform: none; }
+  .btn-y:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+  .err { color: var(--red); font-size: 13px; text-align: center; margin-top: 10px; min-height: 18px; }
+
+  /* Lobby */
+  .waiting-wrap { position: relative; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
+  .pulse { width: 110px; height: 110px; border-radius: 50%; border: 2px solid var(--accent); position: absolute; animation: pulse 2s ease-out infinite; opacity: 0; }
+  @keyframes pulse { 0%{transform:scale(.8);opacity:.8} 100%{transform:scale(1.9);opacity:0} }
+  .avatar { width: 76px; height: 76px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), #e08820); display: flex; align-items: center; justify-content: center; font-family: 'Bebas Neue', sans-serif; font-size: 30px; color: #0d0d14; }
+  .uname { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+  .status { color: var(--muted); font-size: 14px; text-align: center; line-height: 1.6; }
+
+  /* Question */
+  .q-header { width: 100%; display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .q-num { font-size: 12px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
+  .q-timer { font-family: 'Bebas Neue', sans-serif; font-size: 32px; color: var(--accent); transition: color .3s; }
+  .q-timer.urgent { color: var(--red); animation: tick .4s infinite; }
+  @keyframes tick { 0%,100%{transform:scale(1)} 50%{transform:scale(1.15)} }
+  .q-text { font-size: 20px; font-weight: 700; text-align: center; line-height: 1.4; margin-bottom: 28px; }
+  .a-input { font-size: 22px !important; margin-bottom: 12px !important; }
+  .answered { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 16px 0; }
+  .check { width: 64px; height: 64px; border-radius: 50%; background: var(--green); display: flex; align-items: center; justify-content: center; font-size: 28px; animation: pop .3s cubic-bezier(.34,1.56,.64,1); }
+  @keyframes pop { from{transform:scale(0)} to{transform:scale(1)} }
+  .your-ans { font-size: 15px; color: var(--muted); text-align: center; }
+  .your-ans strong { color: var(--text); }
+
+  /* Reveal */
+  .result-banner { width: 100%; border-radius: var(--r); padding: 20px; text-align: center; margin-bottom: 14px; animation: pop .4s cubic-bezier(.34,1.56,.64,1); }
+  .r-win { background: #0d2010; border: 1px solid var(--green); }
+  .r-lose { background: #200d0d; border: 1px solid var(--red); }
+  .r-icon { font-size: 38px; margin-bottom: 6px; }
+  .r-label { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 2px; }
+  .r-win .r-label { color: var(--green); }
+  .r-lose .r-label { color: var(--red); }
+  .r-pts { font-size: 13px; color: var(--muted); margin-top: 4px; }
+  .groups { width: 100%; display: flex; flex-direction: column; gap: 8px; }
+  .group { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; }
+  .group.win { border-color: var(--green); }
+  .g-word { font-weight: 700; font-size: 15px; text-transform: capitalize; }
+  .g-count { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: var(--accent); }
+  .group.win .g-count { color: var(--green); }
+
+  /* Leaderboard */
+  .lb-title { font-family: 'Bebas Neue', sans-serif; font-size: 36px; color: var(--accent); letter-spacing: 3px; margin-bottom: 20px; }
+  .lb-list { width: 100%; display: flex; flex-direction: column; gap: 7px; }
+  .lb-item { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 13px 16px; display: flex; align-items: center; gap: 12px; }
+  .lb-item.me { border-color: var(--accent); }
+  .lb-rank { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: var(--muted); min-width: 26px; }
+  .lb-item:nth-child(1) .lb-rank { color: #ffd700; }
+  .lb-item:nth-child(2) .lb-rank { color: #c0c0c0; }
+  .lb-item:nth-child(3) .lb-rank { color: #cd7f32; }
+  .lb-name { flex: 1; font-weight: 700; font-size: 15px; }
+  .lb-pts { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: var(--accent); }
+
+  /* Finish */
+  .trophy { font-size: 60px; margin-bottom: 14px; }
+  .fin-title { font-family: 'Bebas Neue', sans-serif; font-size: 40px; color: var(--accent); letter-spacing: 3px; margin-bottom: 6px; }
+  .fin-sub { color: var(--muted); margin-bottom: 24px; font-size: 14px; }
+
+  /* Kicked */
+  .kick-icon { font-size: 56px; margin-bottom: 14px; }
+  .kick-title { font-family: 'Bebas Neue', sans-serif; font-size: 34px; color: var(--red); margin-bottom: 8px; }
+  .kick-sub { color: var(--muted); text-align: center; font-size: 14px; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div class="screen active" id="s-room">
+    <div class="logo">FEUDLE</div>
+    <div class="tagline">Family Feud · Live</div>
+    <div class="card">
+      <label>Room Code</label>
+      <input class="code" id="i-room" maxlength="6" placeholder="000000" autocomplete="off" inputmode="numeric">
+      <button class="btn-y" id="b-room">Join</button>
+      <div class="err" id="e-room"></div>
+    </div>
+  </div>
+
+  <div class="screen" id="s-name">
+    <div class="logo">FEUDLE</div>
+    <div class="card">
+      <label>Your Name</label>
+      <input id="i-name" maxlength="20" placeholder="Enter your name" autocomplete="off">
+      <button class="btn-y" id="b-name">Join Game</button>
+      <div class="err" id="e-name"></div>
+    </div>
+  </div>
+
+  <div class="screen" id="s-lobby">
+    <div class="waiting-wrap">
+      <div class="pulse"></div>
+      <div class="avatar" id="l-avatar">?</div>
+    </div>
+    <div class="uname" id="l-uname"></div>
+    <div class="status" id="l-status">Waiting for host<br>to start the game…</div>
+  </div>
+
+  <div class="screen" id="s-question">
+    <div class="q-header">
+      <div class="q-num" id="q-num">Q1 / 8</div>
+      <div class="q-timer" id="q-timer">30</div>
+    </div>
+    <div class="q-text" id="q-text"></div>
+    <div id="q-form">
+      <input class="a-input" id="i-answer" maxlength="100" placeholder="Type your answer…" autocomplete="off" autocorrect="off" spellcheck="false">
+      <button class="btn-y" id="b-answer">Submit Answer</button>
+    </div>
+    <div class="answered" id="q-answered" style="display:none">
+      <div class="check">✓</div>
+      <div class="your-ans">You answered: <strong id="ans-text"></strong></div>
+      <div class="status">Waiting for others…</div>
+    </div>
+  </div>
+
+  <div class="screen" id="s-reveal">
+    <div class="result-banner" id="r-banner">
+      <div class="r-icon" id="r-icon"></div>
+      <div class="r-label" id="r-label"></div>
+      <div class="r-pts" id="r-pts"></div>
+    </div>
+    <div class="groups" id="r-groups"></div>
+  </div>
+
+  <div class="screen" id="s-leaderboard">
+    <div class="lb-title">Leaderboard</div>
+    <div class="lb-list" id="lb-list"></div>
+  </div>
+
+  <div class="screen" id="s-finish">
+    <div class="trophy">🏆</div>
+    <div class="fin-title">Game Over!</div>
+    <div class="fin-sub" id="fin-sub"></div>
+    <div class="lb-list" id="fin-lb"></div>
+  </div>
+
+  <div class="screen" id="s-kicked">
+    <div class="kick-icon">🚫</div>
+    <div class="kick-title">Kicked</div>
+    <div class="kick-sub">You were removed by the host.</div>
+  </div>
+
+</div>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const socket = io()
+let myName = '', myRoom = '', myAnswer = '', timerInt = null
+
+const $ = id => document.getElementById(id)
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'))
+  $('s-' + id).classList.add('active')
+}
+function err(id, msg) { $(id).textContent = msg }
+
+// Room
+$('b-room').onclick = () => socket.emit('player:checkRoom', $('i-room').value.trim())
+$('i-room').onkeydown = e => e.key === 'Enter' && $('b-room').click()
+socket.on('game:roomOk', r => { myRoom = r; show('name'); setTimeout(() => $('i-name').focus(), 100) })
+
+// Name
+$('b-name').onclick = () => socket.emit('player:join', { username: $('i-name').value.trim(), room: myRoom })
+$('i-name').onkeydown = e => e.key === 'Enter' && $('b-name').click()
+socket.on('game:joined', ({ username }) => {
+  myName = username
+  $('l-uname').textContent = username
+  $('l-avatar').textContent = username[0].toUpperCase()
+  show('lobby')
+})
+
+// Answer
+function submit() {
+  const v = $('i-answer').value.trim()
+  if (!v) return
+  myAnswer = v
+  socket.emit('player:answer', v)
+}
+$('b-answer').onclick = submit
+$('i-answer').onkeydown = e => e.key === 'Enter' && submit()
+socket.on('game:answerReceived', () => {
+  $('q-form').style.display = 'none'
+  $('q-answered').style.display = 'flex'
+  $('ans-text').textContent = myAnswer
+})
+
+// Game status
+socket.on('game:status', ({ name, data }) => {
+  if (name === 'STARTING') {
+    $('l-status').textContent = `Starting in ${data.countdown}…`
+    show('lobby')
+    return
+  }
+  if (name === 'QUESTION') {
+    clearInterval(timerInt)
+    myAnswer = ''
+    $('q-num').textContent = `Q${data.questionIndex + 1} / ${data.total}`
+    $('q-text').textContent = data.question
+    $('q-timer').textContent = data.time
+    $('q-timer').classList.remove('urgent')
+    $('q-form').style.display = 'block'
+    $('q-answered').style.display = 'none'
+    $('i-answer').value = ''
+    $('b-answer').disabled = false
+    show('question')
+    setTimeout(() => $('i-answer').focus(), 300)
+    let t = data.time
+    timerInt = setInterval(() => {
+      t--
+      $('q-timer').textContent = t
+      if (t <= 5) $('q-timer').classList.add('urgent')
+      if (t <= 0) clearInterval(timerInt)
+    }, 1000)
+    return
+  }
+  if (name === 'REVEALING') {
+    clearInterval(timerInt)
+    const won = (data.scores[socket.id] || 0) > 0
+    const b = $('r-banner')
+    b.className = 'result-banner ' + (won ? 'r-win' : 'r-lose')
+    $('r-icon').textContent = won ? '🎉' : '😔'
+    $('r-label').textContent = won ? 'YOU MATCHED!' : 'NO MATCH'
+    $('r-pts').textContent = won ? '+10 points' : 'Better luck next round'
+    $('r-groups').innerHTML = data.groups.slice(0, 5).map(g =>
+      `<div class="group ${g.isWinner ? 'win' : ''}">
+        <span class="g-word">${g.canonical}</span>
+        <span class="g-count">${g.count} vote${g.count !== 1 ? 's' : ''}</span>
+      </div>`
+    ).join('')
+    show('reveal')
+    return
+  }
+  if (name === 'LEADERBOARD') {
+    $('lb-list').innerHTML = data.leaderboard.map((p, i) =>
+      `<div class="lb-item ${p.username === myName ? 'me' : ''}">
+        <span class="lb-rank">${i + 1}</span>
+        <span class="lb-name">${p.username}${p.username === myName ? ' 👈' : ''}</span>
+        <span class="lb-pts">${p.points}</span>
+      </div>`
+    ).join('')
+    show('leaderboard')
+    return
+  }
+  if (name === 'FINISH') {
+    const me = data.leaderboard.find(p => p.username === myName)
+    const rank = me ? data.leaderboard.indexOf(me) + 1 : '?'
+    $('fin-sub').textContent = `You finished #${rank} with ${me ? me.points : 0} points`
+    $('fin-lb').innerHTML = data.leaderboard.slice(0, 5).map((p, i) =>
+      `<div class="lb-item ${p.username === myName ? 'me' : ''}">
+        <span class="lb-rank">${i + 1}</span>
+        <span class="lb-name">${p.username}</span>
+        <span class="lb-pts">${p.points}</span>
+      </div>`
+    ).join('')
+    show('finish')
+    return
+  }
+})
+
+socket.on('game:error', msg => {
+  const active = document.querySelector('.screen.active')?.id
+  if (active === 's-room') err('e-room', msg)
+  else if (active === 's-name') err('e-name', msg)
+})
+socket.on('game:kicked', () => show('kicked'))
+socket.on('game:reset', () => {
+  clearInterval(timerInt)
+  myName = ''; myRoom = ''
+  $('l-status').textContent = 'Waiting for host to start the game…'
+  show('room')
+})
+</script>
+</body>
+</html>

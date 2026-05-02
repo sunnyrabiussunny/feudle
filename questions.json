@@ -1,0 +1,34 @@
+[
+  {
+    "question": "What do people do at night?",
+    "time": 30
+  },
+  {
+    "question": "Name something you find in a kitchen.",
+    "time": 25
+  },
+  {
+    "question": "Name a reason someone might be late to work.",
+    "time": 30
+  },
+  {
+    "question": "Name something people do on weekends.",
+    "time": 25
+  },
+  {
+    "question": "Name something you take on a vacation.",
+    "time": 30
+  },
+  {
+    "question": "Name a popular sport.",
+    "time": 20
+  },
+  {
+    "question": "Name something you do when you are bored.",
+    "time": 30
+  },
+  {
+    "question": "Name something you find at a birthday party.",
+    "time": 25
+  }
+]

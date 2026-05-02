@@ -10,8 +10,6 @@
 
 Players join from their phones, see a question like **"What do people do at night?"**, and type any answer they want. The game automatically groups similar answers (`sleep`, `sleeping`, `slept` → same group) and the biggest group wins 10 points each round.
 
-Think **Kahoot** interface + **Family Feud** scoring.
-
 ---
 
 ## ⚙️ Prerequisites
@@ -24,7 +22,7 @@ Think **Kahoot** interface + **Family Feud** scoring.
 
 **Clone the repository:**
 ```bash
-git clone https://github.com/YOUR_USERNAME/feudle.git
+git clone https://github.com/sunnyrabiussunny/feudle.git
 cd feudle
 ```
 
@@ -49,7 +47,7 @@ Open:
 For a full self-hosted Ubuntu install that runs as a background service:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/YOUR_USERNAME/feudle/main/install.sh -o install.sh
+curl -fsSL https://raw.githubusercontent.com/sunnyrabiussunny/feudle/main/install.sh -o install.sh
 sudo bash install.sh
 ```
 

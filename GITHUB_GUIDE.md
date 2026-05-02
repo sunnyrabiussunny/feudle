@@ -57,10 +57,8 @@ GitHub no longer accepts passwords for pushing. You need a token:
 
 ## Step 6 — Push to GitHub
 
-Replace `YOUR_USERNAME` with your actual GitHub username:
-
 ```bash
-git remote add origin https://github.com/YOUR_USERNAME/feudle.git
+git remote add origin https://github.com/sunnyrabiussunny/feudle.git
 git branch -M main
 git push -u origin main
 ```
@@ -74,7 +72,7 @@ When asked for a password — paste your **Personal Access Token** (not your Git
 After pushing, edit `install.sh` and replace this line:
 
 ```bash
-REPO="https://github.com/YOUR_USERNAME/feudle.git"
+REPO="https://github.com/sunnyrabiussunny/feudle.git"
 ```
 
 with your actual repo URL, then push again:
@@ -102,14 +100,14 @@ git push
 ## Step 9 — Install on Any Ubuntu Machine from GitHub
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/YOUR_USERNAME/feudle/main/install.sh -o install.sh
+curl -fsSL https://raw.githubusercontent.com/sunnyrabiussunny/feudle/main/install.sh -o install.sh
 sudo bash install.sh
 ```
 
 Or manually:
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/feudle.git
+git clone https://github.com/sunnyrabiussunny/feudle.git
 cd feudle
 npm install
 npm start
@@ -123,4 +121,4 @@ npm start
 |---|---|
 | `Permission denied (publickey)` | Use HTTPS URL, not SSH. Make sure URL starts with `https://` |
 | `Authentication failed` | Use Personal Access Token as password, not your GitHub password |
-| `remote origin already exists` | Run: `git remote set-url origin https://github.com/YOUR_USERNAME/feudle.git` |
+| `remote origin already exists` | Run: `git remote set-url origin https://github.com/sunnyrabiussunny/feudle.git` |

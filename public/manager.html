@@ -222,14 +222,24 @@ function renderPlayers() {
 function kick(id) { socket.emit('manager:kickPlayer', id) }
 
 // Create room — no password needed
-$('b-create').onclick = () => socket.emit('manager:createRoom')
+$('b-create').onclick = () => {
+  $('b-create').disabled = true
+  $('b-create').textContent = 'Creating…'
+  $('e-login').textContent = ''
+  socket.emit('manager:createRoom')
+}
+
 socket.on('manager:roomCreated', ({ room }) => {
   $('room-num').textContent = room
   $('room-url').textContent = `${location.hostname}:${location.port} → code: ${room}`
   show('lobby')
 })
 
-$('b-start').onclick = () => socket.emit('manager:startGame')
+$('b-start').onclick = () => {
+  $('b-start').disabled = true
+  $('b-start').textContent = 'Starting…'
+  socket.emit('manager:startGame')
+}
 $('b-reset').onclick = () => { if (confirm('Reset the game?')) socket.emit('manager:resetGame') }
 $('b-force').onclick = () => socket.emit('manager:forceReveal')
 $('b-abort').onclick = () => { if (confirm('Abort the quiz?')) socket.emit('manager:resetGame') }
@@ -246,7 +256,13 @@ socket.on('manager:answeredCount', ({ answered, total }) => {
 })
 
 socket.on('game:status', ({ name, data }) => {
-  if (name === 'STARTING') { show('question'); return }
+  if (name === 'STARTING') {
+    // Re-enable start button for next game
+    $('b-start').disabled = false
+    $('b-start').textContent = '▶ Start Game'
+    show('question')
+    return
+  }
 
   if (name === 'QUESTION') {
     clearInterval(stageTimer)
@@ -269,14 +285,16 @@ socket.on('game:status', ({ name, data }) => {
 
   if (name === 'REVEALING') {
     clearInterval(stageTimer)
-    $('g-grid').innerHTML = data.groups.map((g, i) =>
-      `<div class="g-row ${g.isWinner ? 'win' : ''}">
-        <div class="g-rank">${i+1}</div>
-        <div class="g-can">${g.canonical}</div>
-        <div class="g-var">${g.members.map(m => m.original).join(', ')}</div>
-        <div class="g-votes">${g.count}</div>
-      </div>`
-    ).join('')
+    $('g-grid').innerHTML = data.groups.length === 0
+      ? '<div style="color:var(--muted);text-align:center;padding:20px">No answers were submitted</div>'
+      : data.groups.map((g, i) =>
+        `<div class="g-row ${g.isWinner ? 'win' : ''}">
+          <div class="g-rank">${i+1}</div>
+          <div class="g-can">${g.canonical}</div>
+          <div class="g-var">${g.members.map(m => m.original).join(', ')}</div>
+          <div class="g-votes">${g.count}</div>
+        </div>`
+      ).join('')
     show('reveal')
     return
   }
@@ -308,6 +326,12 @@ socket.on('game:status', ({ name, data }) => {
 })
 
 socket.on('game:error', msg => {
+  // Always re-enable buttons on error
+  $('b-create').disabled = false
+  $('b-create').textContent = '▶ Create Room'
+  $('b-start').disabled = false
+  $('b-start').textContent = '▶ Start Game'
+
   const a = document.querySelector('.sc.active')?.id
   if (a === 'sc-login') $('e-login').textContent = msg
   else if (a === 'sc-lobby') $('e-lobby').textContent = msg
@@ -318,7 +342,17 @@ socket.on('game:reset', () => {
   clearInterval(stageTimer)
   players = []
   renderPlayers()
+  $('b-create').disabled = false
+  $('b-create').textContent = '▶ Create Room'
+  $('b-start').disabled = false
+  $('b-start').textContent = '▶ Start Game'
+  $('e-login').textContent = ''
+  $('e-lobby').textContent = ''
   show('login')
+})
+
+socket.on('disconnect', () => {
+  clearInterval(stageTimer)
 })
 </script>
 </body>

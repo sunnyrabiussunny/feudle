@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Feudle</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
@@ -12,8 +12,9 @@
     --accent: #f0c040; --red: #e05c5c; --green: #4ecb71;
     --text: #f0eff5; --muted: #7a798a; --r: 14px;
   }
-  html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; overflow: hidden; }
-  #app { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px 20px; }
+  html { background: var(--bg); }
+  body { min-height: 100vh; min-height: 100dvh; background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; }
+  #app { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px 20px; }
   .screen { display: none; flex-direction: column; align-items: center; width: 100%; max-width: 400px; }
   .screen.active { display: flex; }
 
@@ -22,14 +23,15 @@
 
   .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 24px; width: 100%; }
   label { display: block; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
-  input { width: 100%; background: var(--bg); border: 1.5px solid var(--border); border-radius: 10px; padding: 14px 16px; font-size: 18px; color: var(--text); font-family: 'DM Sans', sans-serif; outline: none; transition: border-color .2s; margin-bottom: 14px; }
+  input { display: block; width: 100%; background: var(--bg); border: 1.5px solid var(--border); border-radius: 10px; padding: 14px 16px; font-size: 18px; color: var(--text); font-family: 'DM Sans', sans-serif; outline: none; transition: border-color .2s; margin-bottom: 14px; -webkit-appearance: none; appearance: none; pointer-events: auto; touch-action: manipulation; }
   input:focus { border-color: var(--accent); }
   input.code { font-size: 30px; letter-spacing: 10px; text-align: center; font-family: 'Bebas Neue', sans-serif; }
-  button { width: 100%; padding: 15px; border: none; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all .15s; }
+  input:disabled { opacity: .5; cursor: not-allowed; }
+  button { display: block; width: 100%; padding: 15px; border: none; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all .15s; touch-action: manipulation; }
   .btn-y { background: var(--accent); color: #0d0d14; }
   .btn-y:hover { filter: brightness(1.1); transform: translateY(-1px); }
-  .btn-y:active { transform: none; }
-  .btn-y:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+  .btn-y:active { transform: none; filter: brightness(.95); }
+  .btn-y:disabled { opacity: .4; cursor: not-allowed; transform: none; filter: none; }
   .err { color: var(--red); font-size: 13px; text-align: center; margin-top: 10px; min-height: 18px; }
 
   /* Lobby */
@@ -47,8 +49,9 @@
   .q-timer.urgent { color: var(--red); animation: tick .4s infinite; }
   @keyframes tick { 0%,100%{transform:scale(1)} 50%{transform:scale(1.15)} }
   .q-text { font-size: 20px; font-weight: 700; text-align: center; line-height: 1.4; margin-bottom: 28px; }
+  #q-form { display: flex; flex-direction: column; width: 100%; }
   .a-input { font-size: 22px !important; margin-bottom: 12px !important; }
-  .answered { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 16px 0; }
+  .answered { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 16px 0; width: 100%; }
   .check { width: 64px; height: 64px; border-radius: 50%; background: var(--green); display: flex; align-items: center; justify-content: center; font-size: 28px; animation: pop .3s cubic-bezier(.34,1.56,.64,1); }
   @keyframes pop { from{transform:scale(0)} to{transform:scale(1)} }
   .your-ans { font-size: 15px; color: var(--muted); text-align: center; }
@@ -133,7 +136,7 @@
     </div>
     <div class="q-text" id="q-text"></div>
     <div id="q-form">
-      <input class="a-input" id="i-answer" maxlength="100" placeholder="Type your answer…" autocomplete="off" autocorrect="off" spellcheck="false">
+      <input class="a-input" id="i-answer" type="text" maxlength="100" placeholder="Type your answer…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
       <button class="btn-y" id="b-answer">Submit Answer</button>
     </div>
     <div class="answered" id="q-answered" style="display:none">
@@ -177,49 +180,93 @@ const socket = io()
 let myName = '', myRoom = '', myAnswer = '', timerInt = null
 
 const $ = id => document.getElementById(id)
+
 function show(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'))
   $('s-' + id).classList.add('active')
 }
-function err(id, msg) { $(id).textContent = msg }
 
-// Room
-$('b-room').onclick = () => socket.emit('player:checkRoom', $('i-room').value.trim())
-$('i-room').onkeydown = e => e.key === 'Enter' && $('b-room').click()
-socket.on('game:roomOk', r => { myRoom = r; show('name'); setTimeout(() => $('i-name').focus(), 100) })
+function clearErr() {
+  ['e-room', 'e-name'].forEach(id => $(id).textContent = '')
+}
 
-// Name
-$('b-name').onclick = () => socket.emit('player:join', { username: $('i-name').value.trim(), room: myRoom })
-$('i-name').onkeydown = e => e.key === 'Enter' && $('b-name').click()
+// ── ROOM CODE ────────────────────────────────────────────────────────────
+$('b-room').onclick = () => {
+  clearErr()
+  const code = $('i-room').value.trim()
+  if (!code) { $('e-room').textContent = 'Please enter a room code'; return }
+  $('b-room').disabled = true
+  $('b-room').textContent = 'Checking…'
+  socket.emit('player:checkRoom', code)
+}
+
+$('i-room').addEventListener('keydown', e => {
+  if (e.key === 'Enter') $('b-room').click()
+})
+
+socket.on('game:roomOk', r => {
+  myRoom = r
+  $('b-room').disabled = false
+  $('b-room').textContent = 'Join'
+  clearErr()
+  show('name')
+  // Small delay so screen renders before focusing
+  setTimeout(() => { try { $('i-name').focus() } catch(e){} }, 200)
+})
+
+// ── NAME ─────────────────────────────────────────────────────────────────
+$('b-name').onclick = () => {
+  clearErr()
+  const name = $('i-name').value.trim()
+  if (!name) { $('e-name').textContent = 'Please enter your name'; return }
+  $('b-name').disabled = true
+  $('b-name').textContent = 'Joining…'
+  socket.emit('player:join', { username: name, room: myRoom })
+}
+
+$('i-name').addEventListener('keydown', e => {
+  if (e.key === 'Enter') $('b-name').click()
+})
+
 socket.on('game:joined', ({ username }) => {
   myName = username
   $('l-uname').textContent = username
   $('l-avatar').textContent = username[0].toUpperCase()
+  $('b-name').disabled = false
+  $('b-name').textContent = 'Join Game'
   show('lobby')
 })
 
-// Answer
-function submit() {
+// ── ANSWER ───────────────────────────────────────────────────────────────
+function submitAnswer() {
   const v = $('i-answer').value.trim()
   if (!v) return
+  if ($('b-answer').disabled) return
   myAnswer = v
+  $('b-answer').disabled = true
+  $('i-answer').disabled = true
   socket.emit('player:answer', v)
 }
-$('b-answer').onclick = submit
-$('i-answer').onkeydown = e => e.key === 'Enter' && submit()
+
+$('b-answer').addEventListener('click', submitAnswer)
+$('i-answer').addEventListener('keydown', e => {
+  if (e.key === 'Enter') submitAnswer()
+})
+
 socket.on('game:answerReceived', () => {
   $('q-form').style.display = 'none'
   $('q-answered').style.display = 'flex'
   $('ans-text').textContent = myAnswer
 })
 
-// Game status
+// ── GAME STATUS ───────────────────────────────────────────────────────────
 socket.on('game:status', ({ name, data }) => {
   if (name === 'STARTING') {
     $('l-status').textContent = `Starting in ${data.countdown}…`
     show('lobby')
     return
   }
+
   if (name === 'QUESTION') {
     clearInterval(timerInt)
     myAnswer = ''
@@ -227,12 +274,22 @@ socket.on('game:status', ({ name, data }) => {
     $('q-text').textContent = data.question
     $('q-timer').textContent = data.time
     $('q-timer').classList.remove('urgent')
-    $('q-form').style.display = 'block'
-    $('q-answered').style.display = 'none'
+
+    // Reset form fully
     $('i-answer').value = ''
+    $('i-answer').disabled = false
     $('b-answer').disabled = false
+    $('b-answer').textContent = 'Submit Answer'
+    $('q-form').style.display = 'flex'
+    $('q-answered').style.display = 'none'
+
     show('question')
-    setTimeout(() => $('i-answer').focus(), 300)
+
+    // Focus with delay to let mobile keyboard open properly
+    setTimeout(() => {
+      try { $('i-answer').focus() } catch(e) {}
+    }, 400)
+
     let t = data.time
     timerInt = setInterval(() => {
       t--
@@ -242,6 +299,7 @@ socket.on('game:status', ({ name, data }) => {
     }, 1000)
     return
   }
+
   if (name === 'REVEALING') {
     clearInterval(timerInt)
     const won = (data.scores[socket.id] || 0) > 0
@@ -259,6 +317,7 @@ socket.on('game:status', ({ name, data }) => {
     show('reveal')
     return
   }
+
   if (name === 'LEADERBOARD') {
     $('lb-list').innerHTML = data.leaderboard.map((p, i) =>
       `<div class="lb-item ${p.username === myName ? 'me' : ''}">
@@ -270,6 +329,7 @@ socket.on('game:status', ({ name, data }) => {
     show('leaderboard')
     return
   }
+
   if (name === 'FINISH') {
     const me = data.leaderboard.find(p => p.username === myName)
     const rank = me ? data.leaderboard.indexOf(me) + 1 : '?'
@@ -286,17 +346,39 @@ socket.on('game:status', ({ name, data }) => {
   }
 })
 
+// ── ERRORS ────────────────────────────────────────────────────────────────
 socket.on('game:error', msg => {
+  // Re-enable buttons so user can try again
+  $('b-room').disabled = false
+  $('b-room').textContent = 'Join'
+  $('b-name').disabled = false
+  $('b-name').textContent = 'Join Game'
+
   const active = document.querySelector('.screen.active')?.id
-  if (active === 's-room') err('e-room', msg)
-  else if (active === 's-name') err('e-name', msg)
+  if (active === 's-room') $('e-room').textContent = msg
+  else if (active === 's-name') $('e-name').textContent = msg
+  else alert(msg)
 })
+
 socket.on('game:kicked', () => show('kicked'))
+
 socket.on('game:reset', () => {
   clearInterval(timerInt)
-  myName = ''; myRoom = ''
+  myName = ''
+  myRoom = ''
+  clearErr()
+  $('i-room').value = ''
+  $('i-name').value = ''
+  $('b-room').disabled = false
+  $('b-room').textContent = 'Join'
+  $('b-name').disabled = false
+  $('b-name').textContent = 'Join Game'
   $('l-status').textContent = 'Waiting for host to start the game…'
   show('room')
+})
+
+socket.on('disconnect', () => {
+  clearInterval(timerInt)
 })
 </script>
 </body>
